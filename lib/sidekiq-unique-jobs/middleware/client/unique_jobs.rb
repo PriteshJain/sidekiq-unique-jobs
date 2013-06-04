@@ -5,9 +5,11 @@ module SidekiqUniqueJobs
     module Client
       class UniqueJobs
         def call(worker_class, item, queue)
+          
+          worker = worker_class.is_a?(String) ? worker_class.constantize : worker_class
 
-          enabled = worker_class.get_sidekiq_options['unique'] || item['unique']
-          unique_job_expiration = worker_class.get_sidekiq_options['unique_job_expiration']
+          enabled = worker.get_sidekiq_options['unique'] || item['unique']
+          unique_job_expiration = worker.get_sidekiq_options['unique_job_expiration']
 
           if enabled
 

@@ -26,7 +26,7 @@ class TestClient < MiniTest::Unit::TestCase
 
     it 'does not push duplicate messages when configured for unique only' do
       QueueWorker.sidekiq_options :unique => true
-      10.times { Sidekiq::Client.push('class' => TestClient::QueueWorker, 'queue' => 'customqueue',  'args' => [1, 2]) }
+      10.times { Sidekiq::Client.push('class' => 'TestClient::QueueWorker', 'queue' => 'customqueue',  'args' => [1, 2]) }
       assert_equal 1, Sidekiq.redis {|c| c.llen("queue:customqueue") }
     end
 
@@ -38,7 +38,7 @@ class TestClient < MiniTest::Unit::TestCase
     it 'sets an expiration when provided by sidekiq options' do
       one_hour_expiration = 60 * 60
       QueueWorker.sidekiq_options :unique => true, :unique_job_expiration => one_hour_expiration
-      Sidekiq::Client.push('class' => TestClient::QueueWorker, 'queue' => 'customqueue',  'args' => [1, 2])
+      Sidekiq::Client.push('class' => 'TestClient::QueueWorker', 'queue' => 'customqueue',  'args' => [1, 2])
 
       payload_hash = SidekiqUniqueJobs::PayloadHelper.get_payload("TestClient::QueueWorker", "customqueue", [1, 2])
       actual_expires_at = Sidekiq.redis {|c| c.ttl(payload_hash) }
@@ -48,7 +48,7 @@ class TestClient < MiniTest::Unit::TestCase
 
     it 'does push duplicate messages when not configured for unique only' do
       QueueWorker.sidekiq_options :unique => false
-      10.times { Sidekiq::Client.push('class' => TestClient::QueueWorker, 'queue' => 'customqueue',  'args' => [1, 2]) }
+      10.times { Sidekiq::Client.push('class' => 'TestClient::QueueWorker', 'queue' => 'customqueue',  'args' => [1, 2]) }
       assert_equal 10, Sidekiq.redis {|c| c.llen("queue:customqueue") }
     end
 
@@ -74,7 +74,7 @@ class TestClient < MiniTest::Unit::TestCase
         assert_equal :args_filter, TestClient::QueueWorkerWithFilterMethod.get_sidekiq_options['unique_args']
 
         for i in (0..10).to_a
-          Sidekiq::Client.push('class' => TestClient::QueueWorkerWithFilterMethod, 'queue' => 'customqueue', 'args' => [1, i])
+          Sidekiq::Client.push('class' => 'TestClient::QueueWorkerWithFilterMethod', 'queue' => 'customqueue', 'args' => [1, i])
         end
         assert_equal 1, Sidekiq.redis {|c| c.llen("queue:customqueue") }
       end
@@ -83,7 +83,7 @@ class TestClient < MiniTest::Unit::TestCase
         assert_kind_of Proc, TestClient::QueueWorkerWithFilterProc.get_sidekiq_options['unique_args']
 
         10.times do
-          Sidekiq::Client.push('class' => TestClient::QueueWorkerWithFilterProc, 'queue' => 'customqueue', 'args' => [ 1, {:random => rand(), :name => "foobar"} ])
+          Sidekiq::Client.push('class' => 'TestClient::QueueWorkerWithFilterProc', 'queue' => 'customqueue', 'args' => [ 1, {:random => rand(), :name => "foobar"} ])
         end
         assert_equal 1, Sidekiq.redis {|c| c.llen("queue:customqueue") }
       end
